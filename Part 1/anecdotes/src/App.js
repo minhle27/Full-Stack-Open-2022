@@ -4,6 +4,8 @@ const Button = ({handleClick, text}) => (
   <button onClick={handleClick}>{text}</button>
 )
 
+const Title = ({text}) => <h1>{text}</h1>
+
 const App = () => {
   const anecdotes = [
     'If it hurts, do it more often.',
@@ -29,12 +31,25 @@ const App = () => {
     setVote(copy)
   }
 
+  const findMaxID = (vote) => {
+    const mostVotes = Math.max(...vote)
+    console.log(mostVotes)
+    for (let i = 0; i < vote.length; i++){
+      if (vote[i] === mostVotes){
+        return i;
+      }
+    }
+  }
+
   console.log(vote)
   return (
     <div>
+      <Title text="Anecdote of the day"/>
       <p>{anecdotes[selected]}</p>
       <Button handleClick={voteClick} text="vote"/>
       <Button handleClick={nextAnecdote} text="next anecdote"/>
+      <Title text="Anecdote with most votes"/>
+      <p>{anecdotes[findMaxID(vote)]}</p>
     </div>
   )
 }
