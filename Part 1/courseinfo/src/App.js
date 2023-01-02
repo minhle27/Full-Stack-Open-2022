@@ -15,16 +15,13 @@ const Content = ({ parts }) =>
   </>
 
 const Course = ({course}) => {
-  let sum = 0
-  for (let i = 0; i < course.parts.length; i++){
-    sum += course.parts[i].exercises
-  }
+  let total = course.parts.reduce((sum, each) => sum + each.exercises, 0)
 
   return (
     <>
       <Header course={course.name}/>
       <Content parts={course.parts} />
-      <Total sum={sum} />
+      <Total sum={total} />
     </>
   )
 }
