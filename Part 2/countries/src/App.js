@@ -1,7 +1,36 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 
-const Country = ({country}) => {
+const Country = ({country, api_key}) => {
+  const [lat, setLat] = useState(0)
+  const [lon, setLon] = useState(0)
+  const url_location = `https://api.openweathermap.org/geo/1.0/direct?q=${country.capital[0]}&limit=1&appid=${api_key}`
+  
+  const [weather, setWeather] = useState({
+    wind: 0,
+    temperature: 0
+  })
+
+  axios
+    .get(url_location)
+    .then(response => {
+      console.log(response.data)
+      setLat(response.data[0].lat)
+      setLon(response.data[0].lon)
+    })
+  
+  let url_weather = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${api_key}`
+
+  axios
+    .get(url_weather)
+    .then(response => {
+      const data = response.data
+      setWeather({
+        wind: data.wind.speed,
+        temperature: data.main.temp
+      })
+    })
+
   return (
     <div>
       <h1>{country.name.common}</h1>
@@ -16,6 +45,9 @@ const Country = ({country}) => {
         </ul>
       </div>
       <img src={country.flags.png} alt={country.name.common} />
+      <h2>Weather in {country.capital[0]}</h2>
+      <p>Temperature: {weather.temperature} Celsius</p>
+      <p>Wind: {weather.wind}</p>
     </div>
   )
 } 
@@ -32,7 +64,7 @@ const Button = ({country, setSearch}) => {
   )
 } 
 
-const Result = ({res, search, setSearch}) => {
+const Result = ({res, search, setSearch, api_key}) => {
 
   if (res.length > 10 && search.length > 0){
     return (
@@ -42,9 +74,11 @@ const Result = ({res, search, setSearch}) => {
 
   else if (res.length === 1){
     const country = res[0]
+
+    
     return (
       <div>
-        <Country country={country} />
+        <Country country={country} api_key={api_key} />
       </div>
     )
   }
@@ -69,6 +103,8 @@ const App = () => {
   const [countries, setCountries] = useState([])
   const [search, setSearch] = useState('')
 
+  const api_key = process.env.REACT_APP_API_KEY
+
   useEffect(() => {
     axios
       .get('https://restcountries.com/v3.1/all')
@@ -83,7 +119,7 @@ const App = () => {
   return (
     <div>
       Find countries: <input value={search} onChange={(event) => setSearch(event.target.value)} />
-      <Result res={res} search={search} setSearch={setSearch} />
+      <Result res={res} search={search} setSearch={setSearch} api_key={api_key} />
     </div>
   )
 }
