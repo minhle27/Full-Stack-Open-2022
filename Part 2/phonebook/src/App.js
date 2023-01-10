@@ -10,18 +10,56 @@ const Filter = ({search, handleSearch}) => {
   )
 }
 
-const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, addNew}) => 
-  <form onSubmit={addNew}>
-    <div>
-      name: <input value={newName} onChange={handleChangeName} />
-    </div>
-    <div>
-      number: <input value={newNum} onChange={handleChangeNum} />
-    </div>
-    <div>
-      <button type="submit">add</button>
-    </div>
-  </form>
+const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons, setPersons, setNewName, setNum}) => {
+
+  const addNew = (event) => {
+    event.preventDefault()
+    const target = persons.find(each => each.name === newName)
+
+    if (target !== undefined){
+      if (window.confirm(`${newName} is already added to the phonebook, replace the old number with the new one?`)){
+        const changedNum = {...target, number: newNum}
+
+        personService
+          .update(target.id, changedNum)
+          .then(returnedNum => {
+            setPersons(persons.map(person => person.id !== target.id ? person : returnedNum))
+            setNewName('')
+            setNum('')
+          })
+      }
+    }
+
+    else{
+      const newDude = {
+        name: newName, 
+        number: newNum, 
+      }
+
+      personService
+        .create(newDude)
+        .then(person => {
+          setPersons(persons.concat(person))
+          setNewName('')
+          setNum('')
+        })
+    }
+  }
+
+  return (
+    <form onSubmit={addNew}>
+      <div>
+        name: <input value={newName} onChange={handleChangeName} />
+      </div>
+      <div>
+        number: <input value={newNum} onChange={handleChangeNum} />
+      </div>
+      <div>
+        <button type="submit">add</button>
+      </div>
+    </form>
+  )
+}
 
 
 const Persons = ({persons, checkSearch, setPersons}) => {
@@ -69,27 +107,6 @@ const App = () => {
 
   const checkSearch = (person) => person.name.toLowerCase().includes(search.toLowerCase())
 
-  const nameArr = persons.map(person => person.name)
-  const addNew = (event) => {
-    event.preventDefault()
-    if (nameArr.find(each => each === newName) !== undefined){
-      alert(`${newName} is already added to the phonebook`)
-    }
-    else{
-      const newDude = {
-        name: newName, 
-        number: newNum, 
-      }
-
-      personService
-        .create(newDude)
-        .then(person => {
-          setPersons(persons.concat(person))
-          setNewName('')
-          setNum('')
-        })
-    }
-  }
 
   return (
     <div>
@@ -99,7 +116,7 @@ const App = () => {
 
       <h3>add a new</h3>
 
-      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} addNew={addNew} />
+      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} persons={persons} setPersons={setPersons} setNewName={setNewName} setNum={setNum} />
 
       <h3>Numbers</h3>
 
