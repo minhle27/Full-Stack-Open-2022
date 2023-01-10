@@ -10,7 +10,7 @@ const Filter = ({search, handleSearch}) => {
   )
 }
 
-const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons, setPersons, setNewName, setNum}) => {
+const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons, setPersons, setNewName, setNum, setSuccessMessage}) => {
 
   const addNew = (event) => {
     event.preventDefault()
@@ -24,6 +24,10 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons
           .update(target.id, changedNum)
           .then(returnedNum => {
             setPersons(persons.map(person => person.id !== target.id ? person : returnedNum))
+            setSuccessMessage(`Updated number: ${newNum} for '${newName}'`)
+            setTimeout(() => {
+              setSuccessMessage(null)
+            }, 5000)
             setNewName('')
             setNum('')
           })
@@ -40,6 +44,10 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons
         .create(newDude)
         .then(person => {
           setPersons(persons.concat(person))
+          setSuccessMessage(`Added '${newName}'`)
+          setTimeout(() => {
+            setSuccessMessage(null)
+          }, 5000)
           setNewName('')
           setNum('')
         })
@@ -80,12 +88,24 @@ const Persons = ({persons, checkSearch, setPersons}) => {
   )
 }
 
+const Notification = ({ message }) => {
+  if (message === null){
+    return null
+  }
+
+  return (
+    <div className='success'>
+      {message}
+    </div>
+  )
+}
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNum, setNum] = useState('')
   const [search, setSearch] = useState('')
+  const [successMessage, setSuccessMessage] = useState(null)
 
   useEffect(() => {
     personService
@@ -112,11 +132,13 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       
+      <Notification message={successMessage} />
+
       <Filter search={search} handleSearch={handleSearch} />
 
       <h3>add a new</h3>
 
-      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} persons={persons} setPersons={setPersons} setNewName={setNewName} setNum={setNum} />
+      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} persons={persons} setPersons={setPersons} setNewName={setNewName} setNum={setNum} setSuccessMessage={setSuccessMessage} />
 
       <h3>Numbers</h3>
 
