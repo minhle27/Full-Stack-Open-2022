@@ -10,7 +10,7 @@ const Filter = ({search, handleSearch}) => {
   )
 }
 
-const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons, setPersons, setNewName, setNum, setSuccessMessage}) => {
+const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons, setPersons, setNewName, setNum, setMessage}) => {
 
   const addNew = (event) => {
     event.preventDefault()
@@ -24,12 +24,36 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons
           .update(target.id, changedNum)
           .then(returnedNum => {
             setPersons(persons.map(person => person.id !== target.id ? person : returnedNum))
-            setSuccessMessage(`Updated number: ${newNum} for '${newName}'`)
+
+            setMessage({
+              text: `Updated number: ${newNum} for '${newName}'`,
+              flag: true
+            })
+
             setTimeout(() => {
-              setSuccessMessage(null)
+              setMessage({text: null, flag: true})
             }, 5000)
+
             setNewName('')
             setNum('')
+          })
+          .catch(error => {
+            setMessage({
+              text: `${newName} was already deleted from the server, adding new...`,
+              flag: false
+            })
+  
+            setTimeout(() => {
+              setMessage({text: null, flag: true})
+            }, 5000)
+            
+            personService
+            .create({...target, number: newNum})
+            .then(() => {
+              personService.getAll().then(modifiedPersons => setPersons(modifiedPersons))
+              setNewName('')
+              setNum('')
+            })
           })
       }
     }
@@ -44,10 +68,16 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons
         .create(newDude)
         .then(person => {
           setPersons(persons.concat(person))
-          setSuccessMessage(`Added '${newName}'`)
+
+          setMessage({
+            text: `Added '${newName}'`,
+            flag: true
+          })
+
           setTimeout(() => {
-            setSuccessMessage(null)
+            setMessage({text: null, flag: true})
           }, 5000)
+
           setNewName('')
           setNum('')
         })
@@ -70,13 +100,35 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, persons
 }
 
 
-const Persons = ({persons, checkSearch, setPersons}) => {
+const Persons = ({persons, checkSearch, setPersons, setMessage}) => {
   const handleDelete = (person) => {
     if (window.confirm(`Do you really want to delete this phone number: ${person.number} -- ${person.name}?`)) {
       personService
         .letDelete(person.id)
         .then(() => {
-          personService.getAll().then(modifiedPersons => setPersons(modifiedPersons))
+          //personService.getAll().then(modifiedPersons => setPersons(modifiedPersons))
+          setMessage({
+            text: `Deleted '${person.name}'`,
+            flag: true
+          })
+
+          setTimeout(() => {
+            setMessage({text: null, flag: true})
+          }, 5000)
+
+          setPersons(persons.filter((each) => each.id !== person.id))
+        })
+        .catch(error => {
+          setMessage({
+            text: `${person.name} -- ${person.number} was already deleted from the server`,
+            flag: false
+          })
+
+          setTimeout(() => {
+            setMessage({text: null, flag: true})
+          }, 5000)
+
+          setPersons(persons.filter((each) => each.id !== person.id))
         })
     }
   }
@@ -89,13 +141,21 @@ const Persons = ({persons, checkSearch, setPersons}) => {
 }
 
 const Notification = ({ message }) => {
-  if (message === null){
+  if (message.text === null){
     return null
   }
 
+  else if (message.flag){
+    return (
+      <div className='success'>
+        {message.text}
+      </div>
+    )
+  }
+
   return (
-    <div className='success'>
-      {message}
+    <div className='error'>
+      {message.text}
     </div>
   )
 }
@@ -105,7 +165,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNum, setNum] = useState('')
   const [search, setSearch] = useState('')
-  const [successMessage, setSuccessMessage] = useState(null)
+  const [message, setMessage] = useState({text: null, flag: true})
 
   useEffect(() => {
     personService
@@ -132,17 +192,17 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       
-      <Notification message={successMessage} />
+      <Notification message={message} />
 
       <Filter search={search} handleSearch={handleSearch} />
 
       <h3>add a new</h3>
 
-      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} persons={persons} setPersons={setPersons} setNewName={setNewName} setNum={setNum} setSuccessMessage={setSuccessMessage} />
+      <PersonForm newName={newName} newNum={newNum} handleChangeName={handleChangeName} handleChangeNum={handleChangeNum} persons={persons} setPersons={setPersons} setNewName={setNewName} setNum={setNum} setMessage={setMessage} />
 
       <h3>Numbers</h3>
 
-      <Persons persons={persons} checkSearch={checkSearch} setPersons={setPersons} />
+      <Persons persons={persons} checkSearch={checkSearch} setPersons={setPersons} setMessage={setMessage} />
     </div>
   )
 }
