@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import personService from './services/persons'
 
@@ -25,10 +24,23 @@ const PersonForm = ({newName, newNum, handleChangeName, handleChangeNum, addNew}
   </form>
 
 
-const Persons = ({persons, checkSearch}) => 
-  <ul>
-    {persons.filter((person) => checkSearch(person)).map(person => <li key={person.name}>{person.name} {person.number}</li>)}
-  </ul>
+const Persons = ({persons, checkSearch, setPersons}) => {
+  const handleDelete = (person) => {
+    if (window.confirm(`Do you really want to delete this phone number: ${person.number} -- ${person.name}?`)) {
+      personService
+        .letDelete(person.id)
+        .then(() => {
+          personService.getAll().then(modifiedPersons => setPersons(modifiedPersons))
+        })
+    }
+  }
+
+  return (
+    <ul>
+      {persons.filter((person) => checkSearch(person)).map(person => <li key={person.id}>{person.name} {person.number} <button onClick={() => handleDelete(person)}>Delete</button></li>)}
+    </ul>
+  )
+}
 
 
 const App = () => {
@@ -91,7 +103,7 @@ const App = () => {
 
       <h3>Numbers</h3>
 
-      <Persons persons={persons} checkSearch={checkSearch} />
+      <Persons persons={persons} checkSearch={checkSearch} setPersons={setPersons} />
     </div>
   )
 }
