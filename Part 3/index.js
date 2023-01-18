@@ -2,14 +2,26 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
+const mongoose = require('mongoose')
 
 app.use(express.static('build'))
 app.use(cors())
 app.use(express.json())
 app.use(morgan('tiny'))
-
 morgan.token('data', (req, res) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms -- :data'))
+
+const url = `mongodb+srv://fullstack:<password>@cluster0.o1opl.mongodb.net/noteApp?retryWrites=true&w=majority`
+
+mongoose.connect(url)
+
+const noteSchema = new mongoose.Schema({
+    content: String,
+    date: Date,
+    important: Boolean,
+  })
+
+const Note = mongoose.model('Note', noteSchema)
 
 let persons = [
     { 
