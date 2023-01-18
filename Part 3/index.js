@@ -79,17 +79,19 @@ app.put('/api/persons/:id', (request, response, next) => {
 })
 
 app.get('/info', (request, response) => {
-    const info = {
-        content: `Phonebook has info for ${Person.length} people`,
-        date: new Date()
-    }
-    response.send(
-        `<div>
-            <p>${info.content}</p>
-            <p>${info.date}</p>
-        </div>`
-    )
-    
+    Person.count().then(res => {
+        const info = {
+            content: `Phonebook has info for ${res} people`,
+            date: new Date()
+        }
+        response.send(
+            `<div>
+                <p>${info.content}</p>
+                <p>${info.date}</p>
+            </div>`
+        )
+    })
+    .catch(err => next(err))
 })
 
 const unknownEndpoint = (request, response) => {
